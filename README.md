@@ -1,52 +1,218 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏢 WAMAS Infocenter
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gerenciamento integrado para operações logísticas, desenvolvido com Laravel e Bootstrap.
 
-## About Laravel
+![Laravel](https://img.shields.io/badge/Laravel-11-red?style=flat-square&logo=laravel)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple?style=flat-square&logo=bootstrap)
+![PHP](https://img.shields.io/badge/PHP-8.2-blue?style=flat-square&logo=php)
+![SQLite](https://img.shields.io/badge/SQLite-3-green?style=flat-square&logo=sqlite)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📋 Sobre
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+WAMAS Infocenter é uma aplicação web completa para gerenciar operações de logística e armazenamento. O sistema oferece uma interface intuitiva com controle de visibilidade de ferramentas, configurações de servidor e integração de dados.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Funcionalidades Principais
 
-## Learning Laravel
+### 🎛️ Painel de Configurações
+- **Gerenciador de Ferramentas**: Ativar/desativar itens do painel principal com toggles
+- **Configurações de Servidor**: Definir endpoints e credenciais de banco de dados
+- Interface com duas abas (Ferramentas e Servidor)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 🔗 Sistema de Integrações
+- **Módulo de Itens**: Gestão de SKU, descrição e quantidade
+- **Armazenamento**: Controle de zonas e quantidades em estoque
+- **Picking**: Gerenciamento de retiradas com localização
+- **Inventário**: Tabela com dados em tempo real, exportação para Excel e refresh automático
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🏠 Home Dinâmica
+- Exibição de ferramentas configuráveis
+- Cards com ícones e rápido acesso
+- Layout responsivo (2-6 colunas)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 📊 Ferramentas Disponíveis
+- Integração de dados
+- Grupo P2L Prateleira
+- Compartimentos
+- Desbloquear Compartimentos
+- Cubatura Item para Caixa
+- Escanear para Pegar/Guardar
+- Terminais
+- Gerenciamento de Estoque Mínimo
+- Estatísticas
+- Importação de Planilha
+- Erros de Interface
+- Manuais
 
-## Laravel Sponsors
+## 🚀 Começando
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Requisitos
+- PHP 8.2+
+- Composer
+- Node.js e npm
+- SQLite
 
-### Premium Partners
+### Instalação
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+# Clone o repositório
+git clone https://github.com/brunobendel/wamas_Infocenter.git
+cd wamas_Infocenter
 
-## Contributing
+# Instale dependências PHP
+composer install
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Instale dependências JavaScript
+npm install
+
+# Configure o arquivo .env
+cp .env.example .env
+
+# Gere a chave da aplicação
+php artisan key:generate
+
+# Execute as migrações e seeders
+php artisan migrate --seed
+
+# Compile assets
+npm run dev
+```
+
+### Rodando a Aplicação
+
+```bash
+# Em um terminal - iniciar o servidor Laravel
+php artisan serve
+
+# Em outro terminal - compilar assets em tempo real
+npm run dev
+```
+
+A aplicação estará disponível em `http://localhost:8000`
+
+## 📁 Estrutura do Projeto
+
+```
+├── app/
+│   ├── Http/
+│   │   └── Controllers/
+│   │       ├── HomeController.php
+│   │       ├── SettingsController.php
+│   │       └── IntegracaoController.php
+│   ├── Models/
+│   │   ├── ToolSetting.php
+│   │   ├── ServerSetting.php
+│   │   └── User.php
+│   └── Imports/
+│       └── ColunaImport.php
+├── database/
+│   ├── migrations/
+│   ├── seeders/
+│   │   ├── ToolSettingSeeder.php
+│   │   └── ServerSettingSeeder.php
+│   └── factories/
+├── resources/
+│   ├── views/
+│   │   ├── site/
+│   │   │   ├── home.blade.php
+│   │   │   ├── settings.blade.php
+│   │   │   └── integracao.blade.php
+│   │   └── welcome.blade.php
+│   ├── css/
+│   └── js/
+├── routes/
+│   ├── web.php
+│   └── console.php
+└── public/
+```
+
+## 🔌 API Endpoints
+
+### Configurações
+- `GET /settings` - Página de configurações
+- `POST /api/settings/toggle` - Alternar visibilidade de ferramenta
+- `POST /api/settings/server` - Atualizar configuração de servidor
+
+### Integrações
+- `GET /integracao` - Página de integrações
+
+## 💾 Banco de Dados
+
+### Tabelas Principais
+
+**tool_settings**
+- ID única
+- Nome da ferramenta (único)
+- Label para exibição
+- Caminho do ícone
+- Status de visibilidade (booleano)
+- Ordem de exibição
+
+**server_settings**
+- ID única
+- Chave de configuração (única)
+- Label descritivo
+- Valor da configuração
+- Tipo de campo
+- Timestamps
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Backend**: Laravel 11
+- **Frontend**: Bootstrap 5.3.2, Font Awesome
+- **Banco de Dados**: SQLite
+- **Build Tool**: Vite
+- **Exportação**: XLSX (cdnjs)
+- **Validação**: CSRF Token
+- **API**: REST JSON
+
+## 📝 Funcionalidades Técnicas
+
+- Autenticação com CSRF protection
+- Migrações versionadas
+- Seeders para dados iniciais
+- Controllers com validação
+- Blade templating
+- AJAX com fetch API
+- Export para Excel
+- Layout responsivo
+
+## 🔐 Segurança
+
+- CSRF token em todos os formulários
+- Validação de entrada
+- Headers de segurança
+- Proteção contra SQL Injection (Eloquent ORM)
+
+## 📈 Roadmap
+
+- [ ] APIs de backend para integrações
+- [ ] Conexão com MSSQL
+- [ ] Autenticação de usuários
+- [ ] Dashboard com gráficos
+- [ ] Relatórios avançados
+- [ ] Mobile app
+
+## 👨‍💻 Autor
+
+**Bruno Bendel**
+- GitHub: [@brunobendel](https://github.com/brunobendel)
+- Projeto: [wamas_Infocenter](https://github.com/brunobendel/wamas_Infocenter)
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Para grandes mudanças, abra uma issue primeiro para discutir as alterações propostas.
+
+## 📞 Suporte
+
+Para suporte, abra uma issue no repositório GitHub.
+
+---
+
+**Desenvolvido com ❤️ usando Laravel e Bootstrap**
 
 ## Code of Conduct
 
