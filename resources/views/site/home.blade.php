@@ -4,91 +4,53 @@
 
 @section('content')
 <div class="container my-4">
-    <h3 class="mb-4 fw-bold text-danger">WAMAS <span class="text-dark">LogiMat Infocenter 2.0</span></h3>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold text-danger mb-0">WAMAS <span class="text-dark">LogiMat Infocenter 2.0</span></h3>
+        <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-cog"></i> Configurações
+        </a>
+    </div>
 
     <!-- Ferramentas -->
     <div class="mb-5">
         <h4 class="mb-3">Ferramentas</h4>
         <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4">
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/test.png" class="mx-auto" alt="TEST">
-                    <p>Integração</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/P2L.png" class="mx-auto" alt="Grupo P2L">
-                    <p>GRUPO P2L PRATELEIRA</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/compartimentos.png" class="mx-auto" alt="Compartimentos">
-                    <p>COMPARTIMENTOS</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/unlock.png" class="mx-auto" alt="Desbloquear">
-                    <p>DESBLOQUEAR COMPARTIMENTOS</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/cubatura.png" class="mx-auto" alt="Cubatura">
-                    <p>CUBATURA ITEM P/ CAIXA</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/barcode.png" class="mx-auto" alt="Escaneie">
-                    <p>ESCANEIE P/ PEGAR/GUARDAR</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/terminais.png" class="mx-auto" alt="Terminais">
-                    <p>TERMINAIS</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/inventory.png" class="mx-auto" alt="Terminais">
-                    <p>Gerenciamento de Estoque Mínimo</p>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/report.png" class="mx-auto" alt="Terminais">
-                    <p>Estatísticas</p>
-                </div>
-            </div>
-            <div class="col">
-                <a href="{{ url('/importar-excel') }}" style="text-decoration: none; color: inherit;">
+            @forelse($visibleTools as $tool)
+                <div class="col">
+                    @php
+                        $url = match($tool->tool_name) {
+                            'integracao' => route('integracao.index'),
+                            'importacao_planilha' => url('/importar-excel'),
+                            default => '#'
+                        };
+                        $shouldLink = in_array($tool->tool_name, ['integracao', 'importacao_planilha']);
+                    @endphp
+                    
+                    @if($shouldLink)
+                        <a href="{{ $url }}" style="text-decoration: none; color: inherit;">
+                    @endif
+                    
                     <div class="card card-tool text-center p-3 h-100">
-                        <img src="/images/Importação de planilha.png" class="mx-auto" alt="Terminais">
-                        <p>Importação de planilha</p>
+                        <img src="{{ $tool->icon_path }}" class="mx-auto" alt="{{ $tool->tool_label }}" style="max-height: 50px; width: auto;">
+                        <p class="mt-3">{{ $tool->tool_label }}</p>
                     </div>
-                </a>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/error.png" class="mx-auto" alt="Erros">
-                    <p>ERROS DE INTERFACE</p>
+                    
+                    @if($shouldLink)
+                        </a>
+                    @endif
                 </div>
-            </div>
-            <div class="col">
-                <div class="card card-tool text-center p-3 h-100">
-                    <img src="/images/manuais.png" class="mx-auto" alt="Manuais">
-                    <p>MANUAIS</p>
+            @empty
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Nenhuma ferramenta visível. Acesse as <a href="{{ route('settings.index') }}">configurações</a> para ativar ferramentas.
+                    </div>
                 </div>
-            </div>
+            @endforelse
         </div>
     </div>
 
     <!-- Relatórios Rápidos -->
-    <div>
+    {{-- <div>
         <h4 class="mb-3">Relatórios rápidos</h4>
         <div class="row g-4">
             <div class="col-md-4">
@@ -116,7 +78,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
