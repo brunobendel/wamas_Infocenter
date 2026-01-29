@@ -1,16 +1,31 @@
 <?php
 
-namespace Database\Seeders;
+namespace App\Console\Commands;
 
 use App\Models\ToolSetting;
-use Illuminate\Database\Seeder;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
-class ToolSettingSeeder extends Seeder
+class PopulateToolSettings extends Command
 {
     /**
-     * Run the database seeds.
+     * The name and signature of the console command.
+     *
+     * @var string
      */
-    public function run(): void
+    protected $signature = 'app:populate-tool-settings';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Populate tool settings table with default tools';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
     {
         $tools = [
             [
@@ -99,11 +114,24 @@ class ToolSettingSeeder extends Seeder
             ],
         ];
 
+        // Clear existing data
+        ToolSetting::truncate();
+
+        // Insert fresh data without timestamps - let the database handle defaults
         foreach ($tools as $tool) {
-            ToolSetting::updateOrCreate(
-                ['tool_name' => $tool['tool_name']],
-                $tool
+            DB::statement(
+                "INSERT INTO tool_settings (tool_name, tool_label, icon_path, is_visible, sort_order) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [
+                    $tool['tool_name'],
+                    $tool['tool_label'],
+                    $tool['icon_path'],
+                    $tool['is_visible'] ? 1 : 0,
+                    $tool['sort_order'],
+                ]
             );
         }
+
+        $this->info('Tool settings populated successfully!');
     }
 }

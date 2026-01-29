@@ -77,33 +77,39 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Engine</label>
-                                        <input type="text" class="form-control server-input" data-key="db_engine" value="{{ $serverSettings->where('key', 'db_engine')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="db_engine" value="{{ $currentConfig['db_engine'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_engine'] ?? 'não definido' }}</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Server</label>
-                                        <input type="text" class="form-control server-input" data-key="db_server" value="{{ $serverSettings->where('key', 'db_server')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="db_server" value="{{ $currentConfig['db_server'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_server'] ?? 'não definido' }}</small>
                                     </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Port</label>
-                                        <input type="number" class="form-control server-input" data-key="db_port" value="{{ $serverSettings->where('key', 'db_port')->first()?->value }}">
+                                        <input type="number" class="form-control server-input" data-key="db_port" value="{{ $currentConfig['db_port'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_port'] ?? 'não definido' }}</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Instance</label>
-                                        <input type="text" class="form-control server-input" data-key="db_instance" value="{{ $serverSettings->where('key', 'db_instance')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="db_instance" value="{{ $currentConfig['db_instance'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_instance'] ?? 'não definido' }}</small>
                                     </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Username</label>
-                                        <input type="text" class="form-control server-input" data-key="db_username" value="{{ $serverSettings->where('key', 'db_username')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="db_username" value="{{ $currentConfig['db_username'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_username'] ?? 'não definido' }}</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">DB Password</label>
-                                        <input type="password" class="form-control server-input" data-key="db_password" value="{{ $serverSettings->where('key', 'db_password')->first()?->value }}">
+                                        <input type="password" class="form-control server-input" data-key="db_password" value="{{ $currentConfig['db_password'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['db_password'] ? '***' : 'não definido' }}</small>
                                     </div>
                                 </div>
 
@@ -114,15 +120,18 @@
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold">WAMAS Production DB</label>
-                                        <input type="text" class="form-control server-input" data-key="wamas_prod" value="{{ $serverSettings->where('key', 'wamas_prod')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="wamas_prod" value="{{ $currentConfig['wamas_prod'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['wamas_prod'] ?? 'não definido' }}</small>
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold">WAMAS View DB</label>
-                                        <input type="text" class="form-control server-input" data-key="wamas_view" value="{{ $serverSettings->where('key', 'wamas_view')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="wamas_view" value="{{ $currentConfig['wamas_view'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['wamas_view'] ?? 'não definido' }}</small>
                                     </div>
                                     <div class="col-md-4 mb-3">
                                         <label class="form-label fw-bold">WAMAS Archive DB</label>
-                                        <input type="text" class="form-control server-input" data-key="wamas_arch" value="{{ $serverSettings->where('key', 'wamas_arch')->first()?->value }}">
+                                        <input type="text" class="form-control server-input" data-key="wamas_arch" value="{{ $currentConfig['wamas_arch'] ?? '' }}">
+                                        <small class="text-muted">Atual: {{ $currentConfig['wamas_arch'] ?? 'não definido' }}</small>
                                     </div>
                                 </div>
 
@@ -174,6 +183,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    
     // Toggles de ferramentas
     document.querySelectorAll('.tool-toggle').forEach(toggle => {
         toggle.addEventListener('change', async function() {
@@ -182,17 +192,35 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch('{{ url("/api/settings/toggle") }}', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({
-                        tool_name: toolName
-                    })
+                    body: JSON.stringify({ tool_name: toolName })
                 });
-                
-                const data = await response.json();
-                
+
+                if (!response.ok) {
+                    const text = await response.text().catch(() => 'no body');
+                    console.error('Toggle failed', response.status, text);
+                    this.checked = !this.checked;
+                    alert('Erro ao atualizar configuração: ' + response.status + ' - ' + text);
+                    return;
+                }
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    const text = await response.text().catch(() => 'no body');
+                    console.error('Invalid JSON response', text);
+                    this.checked = !this.checked;
+                    alert('Resposta inválida do servidor');
+                    return;
+                }
+
                 if (!data.success) {
                     this.checked = !this.checked;
                     alert('Erro ao atualizar configuração');
@@ -215,34 +243,46 @@ document.addEventListener('DOMContentLoaded', function() {
             let count = 0;
             let totalInputs = inputs.length;
 
-            inputs.forEach(input => {
-                const key = input.getAttribute('data-key');
-                const value = input.value;
+            (async function() {
+                for (const input of inputs) {
+                    const key = input.getAttribute('data-key');
+                    const value = input.value;
 
-                fetch('{{ url("/api/settings/server") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        key: key,
-                        value: value
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Resposta:', data);
-                    count++;
-                    if (count === totalInputs) {
-                        alert('Todas as configurações foram salvas com sucesso!');
+                    try {
+                        const resp = await fetch('{{ url("/api/settings/server") }}', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ key: key, value: value })
+                        });
+
+                        if (!resp.ok) {
+                            const txt = await resp.text().catch(() => 'no body');
+                            console.error('Server setting save failed', resp.status, txt);
+                            alert('Erro ao salvar configuração: ' + key + ' (' + resp.status + ')');
+                            return;
+                        }
+
+                        const data = await resp.json().catch(() => null);
+                        console.log('Resposta:', data);
+                        count++;
+
+                    } catch (err) {
+                        console.error('Erro:', err);
+                        alert('Erro ao salvar configuração: ' + key);
+                        return;
                     }
-                })
-                .catch(error => {
-                    console.error('Erro:', error);
-                    count++;
-                });
-            });
+                }
+
+                if (count === totalInputs) {
+                    alert('Todas as configurações foram salvas com sucesso!');
+                }
+            })();
         });
     } else {
         console.error('Formulário form-server-settings não encontrado');

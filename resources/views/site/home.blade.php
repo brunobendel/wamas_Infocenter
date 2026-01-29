@@ -6,9 +6,29 @@
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold text-danger mb-0">WAMAS <span class="text-dark">LogiMat Infocenter 2.0</span></h3>
-        <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-cog"></i> Configurações
-        </a>
+        <div class="d-flex gap-2">
+            @auth
+                <span class="badge bg-info text-dark">{{ Auth::user()->name }}</span>
+                <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-cog"></i> Configurações
+                </a>
+                <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </a>
+                @if (Route::has('register'))
+                    <a href="{{ route('register') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user-plus"></i> Registrar
+                    </a>
+                @endif
+            @endauth
+        </div>
     </div>
 
     <!-- Ferramentas -->
