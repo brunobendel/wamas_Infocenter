@@ -12,7 +12,9 @@ Route::get('/', [HomeController::class, 'index']);
 
 Route::get('/teste', [TesteController::class, 'index']);
 
-Route::get('/integracao', [IntegracaoController::class, 'index'])->name('integracao.index');
+Route::get('/integracao', [IntegracaoController::class, 'index'])
+    ->name('integracao.index')
+    ->middleware(['auth', \App\Http\Middleware\EnsureAdmin::class]);
 
 // Authentication routes
 Route::get('/login', function () {
@@ -64,11 +66,14 @@ Route::post('/register', function (Illuminate\Http\Request $request) {
     return redirect('/');
 })->middleware('guest');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/api/settings/toggle', [SettingsController::class, 'toggle'])->name('settings.toggle');
     Route::post('/api/settings/server', [SettingsController::class, 'updateServerSetting'])->name('settings.server');
+    Route::post('/api/settings/permission', [SettingsController::class, 'setPermission'])->name('settings.permission');
 });
 
-Route::get('/importar-excel', [ImportController::class, 'importForm']);
-Route::post('/importar-excel', [ImportController::class, 'importExcel'])->name('import.excel');
+Route::middleware(['auth', \App\Http\Middleware\EnsureAdmin::class])->group(function () {
+    Route::get('/importar-excel', [ImportController::class, 'importForm']);
+    Route::post('/importar-excel', [ImportController::class, 'importExcel'])->name('import.excel');
+});

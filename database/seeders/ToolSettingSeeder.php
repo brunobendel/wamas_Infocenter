@@ -15,7 +15,7 @@ class ToolSettingSeeder extends Seeder
         $tools = [
             [
                 'tool_name' => 'integracao',
-                'tool_label' => 'Integração',
+                'tool_label' => 'Integração Manual',
                 'icon_path' => '/images/test.png',
                 'is_visible' => true,
                 'sort_order' => 1,

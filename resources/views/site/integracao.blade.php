@@ -129,16 +129,44 @@
 </style>
 
 <script>
-document.querySelectorAll('.integration-radio').forEach(radio => {
-    radio.addEventListener('change', function() {
-        if (this.checked) {
-            updateIntegrationForm(this.value);
-        }
+// Esperar o DOM estar completamente carregado
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeIntegration);
+} else {
+    // DOM já foi carregado
+    initializeIntegration();
+}
+
+function initializeIntegration() {
+    console.log('=== Inicializando integração ===');
+    
+    const radios = document.querySelectorAll('.integration-radio');
+    console.log('Encontrados ' + radios.length + ' radio buttons');
+    
+    if (radios.length === 0) {
+        console.error('Nenhum radio button encontrado com class "integration-radio"');
+        return;
+    }
+    
+    radios.forEach((radio, index) => {
+        console.log(`Radio ${index}: ${radio.id} = ${radio.value}`);
+        radio.addEventListener('change', function() {
+            console.log('>> Radio mudou para: ' + this.value);
+            if (this.checked) {
+                updateIntegrationForm(this.value);
+            }
+        });
     });
-});
+}
 
 function updateIntegrationForm(tipo) {
+    console.log('>>> Atualizando formulário para: ' + tipo);
     const content = document.getElementById('integracao-content');
+    
+    if (!content) {
+        console.error('ERRO: Elemento integracao-content não encontrado!');
+        return;
+    }
 
     const formulas = {
         itens: `
@@ -148,25 +176,24 @@ function updateIntegrationForm(tipo) {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="itens-sku" class="form-label">SKU/Código do Item</label>
-                            <input type="text" class="form-control" id="itens-sku" placeholder="Ex: ITEM-001">
+                            <input type="text" class="form-control" id="itens-sku" name="sku" placeholder="Ex: ITEM-001" required>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="itens-descricao" class="form-label">Descrição</label>
-                            <input type="text" class="form-control" id="itens-descricao" placeholder="Descrição do item">
+                            <input type="text" class="form-control" id="itens-descricao" name="description" placeholder="Descrição do item" required>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="itens-unidade" class="form-label">Unidade de Medida</label>
-                            <select class="form-select" id="itens-unidade">
-                                <option selected>Selecione...</option>
-                                <option value="un">Unidade</option>
-                                <option value="kg">Quilograma</option>
-                                <option value="l">Litro</option>
-                                <option value="m">Metro</option>
-                            </select>
+                            <input type="text" class="form-control" id="itens-unidade" name="base_qty_unit" value="PCS" placeholder="Ex: PCS">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="itens-variant" class="form-label">Variante</label>
+                            <input type="text" class="form-control" id="itens-variant" name="variant" value="00000" placeholder="Ex: 00000">
                         </div>
                     </div>
+                    <div id="alert-resultado" style="display: none;"></div>
                     <button type="submit" class="btn btn-primary btn-submit-integracao">
                         <i class="fas fa-check"></i> Enviar Integração
                     </button>
@@ -261,14 +288,20 @@ function updateIntegrationForm(tipo) {
     };
 
     content.innerHTML = formulas[tipo] || '<div class="alert alert-warning">Formulário não encontrado</div>';
+    console.log('>>> Conteúdo do formulário inserido para tipo: ' + tipo);
+    console.log('>>> HTML inserido:', content.innerHTML.substring(0, 100) + '...');
 
     // Adicionar evento ao formulário
     const form = content.querySelector('form');
+    console.log('>>> Formulário encontrado?', !!form);
     if (form) {
+        console.log('>>> Adicionando listener de submit ao formulário');
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             handleFormSubmit(tipo, this);
         });
+    } else {
+        console.warn('>>> AVISO: Formulário não foi encontrado após inserção do HTML');
     }
 }
 
@@ -280,18 +313,98 @@ function handleFormSubmit(tipo, form) {
     console.log('Tipo:', tipo);
     console.log('Dados:', data);
 
-    // Aqui você chamará a API
-    // Exemplo:
-    // fetch('/api/integracao/' + tipo, {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'X-CSRF-TOKEN': '{{ csrf_token() }}'
-    //     },
-    //     body: JSON.stringify(data)
-    // })
+    // Mostrar alerta de carregamento
+    const alertDiv = document.getElementById('alert-resultado');
+    if (alertDiv) {
+        alertDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Processando...</div>';
+        alertDiv.style.display = 'block';
+    }
 
-    alert('Formulário de ' + tipo + ' pronto para enviar à API!\nVerifique o console para os dados.');
+    // Chamar API baseado no tipo
+    if (tipo === 'itens') {
+        fetch('/api/xml-integration/insert', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`HTTP ${response.status}: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.success) {
+                // Mostrar mensagem de sucesso
+                const alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <h5 class="alert-heading"><i class="fas fa-check-circle"></i> ${result.label}</h5>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Sequence ID:</strong> ${result.details.sequence}<br>
+                                <strong>SKU:</strong> ${result.summary.sku}<br>
+                                <strong>Descrição:</strong> ${result.summary.description}
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Unidade:</strong> ${result.summary.base_qty_unit}<br>
+                                <strong>Variante:</strong> ${result.summary.variant}<br>
+                                <strong>Status:</strong> <span class="badge bg-warning">${result.summary.status}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <details class="mt-3">
+                            <summary>Ver XML Gerado</summary>
+                            <pre class="mt-2"><code>${escapeHtml(result.details.data)}</code></pre>
+                        </details>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                alertDiv.innerHTML = alertHtml;
+                alertDiv.style.display = 'block';
+                
+                // Limpar formulário
+                form.reset();
+                
+                // Auto-fechar após 10 segundos
+                setTimeout(() => {
+                    alertDiv.style.display = 'none';
+                }, 10000);
+            } else {
+                alertDiv.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <h5><i class="fas fa-times-circle"></i> ${result.label}</h5>
+                    ${result.message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alertDiv.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h5><i class="fas fa-exclamation-triangle"></i> Erro na requisição</h5>
+                <p><strong>Detalhes:</strong> ${escapeHtml(error.message)}</p>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        });
+    } else {
+        alert('Formulário de ' + tipo + ' ainda não implementado!');
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // Função para exportar tabela para Excel

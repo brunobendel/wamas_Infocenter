@@ -90,7 +90,7 @@ cp .env.example .env
 php artisan key:generate
 
 # Execute as migrações
-php artisan migrate
+php artisan migrate:fresh --seed
 
 # Popule as ferramentas padrão
 php artisan app:populate-tool-settings

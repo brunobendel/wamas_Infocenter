@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ToolSetting;
 use App\Models\ServerSetting;
+use App\Models\User;
+use App\Models\UserToolPermission;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -12,6 +14,16 @@ class SettingsController extends Controller
     {
         $tools = ToolSetting::orderBy('sort_order')->get();
         $serverSettings = ServerSetting::all();
+
+        // Exclude admin users from the permissions matrix (admins already have full access)
+        $users = User::where('role', '!=', 'admin')->orderBy('name')->get();
+
+        // Build permissions map: [user_id => [tool_name => allowed]]
+        $permissions = [];
+        $allPerms = UserToolPermission::with('tool')->get();
+        foreach ($allPerms as $p) {
+            $permissions[$p->user_id][$p->tool->tool_name] = (bool)$p->allowed;
+        }
         
         // Get current runtime config values
         $currentConfig = [
@@ -26,7 +38,7 @@ class SettingsController extends Controller
             'wamas_arch' => $serverSettings->where('key', 'wamas_arch')->first()?->value ?? '',
         ];
         
-        return view('site.settings', compact('tools', 'serverSettings', 'currentConfig'));
+        return view('site.settings', compact('tools', 'serverSettings', 'currentConfig', 'users', 'permissions'));
     }
 
     public function toggle(Request $request)
@@ -51,5 +63,28 @@ class SettingsController extends Controller
         }
 
         return response()->json(['success' => false], 404);
+    }
+
+    public function setPermission(Request $request)
+    {
+        $validated = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'tool_name' => 'required|string|exists:tool_settings,tool_name',
+            'allowed' => 'required|boolean',
+        ]);
+
+        $tool = ToolSetting::where('tool_name', $validated['tool_name'])->first();
+
+        $perm = UserToolPermission::updateOrCreate(
+            [
+                'user_id' => $validated['user_id'],
+                'tool_setting_id' => $tool->id,
+            ],
+            [
+                'allowed' => $validated['allowed'],
+            ]
+        );
+
+        return response()->json(['success' => true, 'permission' => $perm]);
     }
 }

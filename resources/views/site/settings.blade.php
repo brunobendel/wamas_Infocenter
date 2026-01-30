@@ -9,60 +9,23 @@
             <!-- Nav Tabs -->
             <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="ferramentas-tab" data-bs-toggle="tab" data-bs-target="#ferramentas-pane" type="button" role="tab">
-                        <i class="fas fa-wrench"></i> Ferramentas
+                    <button class="nav-link active" id="servidor-tab" data-bs-toggle="tab" data-bs-target="#servidor-pane" type="button" role="tab">
+                        <i class="fas fa-server"></i> Servidor
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="servidor-tab" data-bs-toggle="tab" data-bs-target="#servidor-pane" type="button" role="tab">
-                        <i class="fas fa-server"></i> Servidor
+                    <button class="nav-link" id="permissoes-tab" data-bs-toggle="tab" data-bs-target="#permissoes-pane" type="button" role="tab">
+                        <i class="fas fa-lock"></i> Permissões
                     </button>
                 </li>
             </ul>
 
             <!-- Tab Content -->
             <div class="tab-content" id="settingsTabContent">
-                <!-- Aba Ferramentas -->
-                <div class="tab-pane fade show active" id="ferramentas-pane" role="tabpanel" tabindex="0">
-                    <h2 class="mb-4 fw-bold text-danger">
-                        <i class="fas fa-cog"></i> Configurações de Ferramentas
-                    </h2>
-                    <p class="text-muted mb-4">Clique no toggle para mostrar ou ocultar cada ferramenta na tela inicial</p>
-
-                    <div class="list-group">
-                        @foreach($tools as $tool)
-                            <div class="list-group-item d-flex justify-content-between align-items-center p-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    @if($tool->icon_path)
-                                        <img src="{{ $tool->icon_path }}" alt="{{ $tool->tool_label }}" style="height: 40px; width: auto;">
-                                    @else
-                                        <div style="height: 40px; width: 40px; background-color: #e9ecef; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                            <i class="fas fa-cube text-muted"></i>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <h5 class="mb-0">{{ $tool->tool_label }}</h5>
-                                        <small class="text-muted">{{ $tool->tool_name }}</small>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-check form-switch">
-                                    <input 
-                                        class="form-check-input tool-toggle" 
-                                        type="checkbox" 
-                                        id="toggle-{{ $tool->id }}"
-                                        data-tool-name="{{ $tool->tool_name }}"
-                                        {{ $tool->is_visible ? 'checked' : '' }}
-                                        style="cursor: pointer; width: 3em; height: 1.5em;"
-                                    >
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
+                <!-- Ferramentas removidas: agora apenas Servidor e Permissões -->
 
                 <!-- Aba Servidor -->
-                <div class="tab-pane fade" id="servidor-pane" role="tabpanel" tabindex="0">
+                <div class="tab-pane fade show active" id="servidor-pane" role="tabpanel" tabindex="0">
                     <h2 class="mb-4 fw-bold text-danger">
                         <i class="fas fa-server"></i> Configurações de Servidor
                     </h2>
@@ -144,6 +107,43 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Aba Permissões -->
+                <div class="tab-pane fade" id="permissoes-pane" role="tabpanel" tabindex="0">
+                    <h2 class="mb-4 fw-bold text-danger">
+                        <i class="fas fa-lock"></i> Permissões por Usuário
+                    </h2>
+
+                    <p class="text-muted mb-3">Marque as caixas para permitir que um usuário utilize cada ferramenta.</p>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Usuário</th>
+                                    @foreach($tools as $tool)
+                                        <th class="text-center">{{ $tool->tool_label }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($users as $user)
+                                    <tr>
+                                        <td>{{ $user->name }}<br><small class="text-muted">{{ $user->email }}</small></td>
+                                        @foreach($tools as $tool)
+                                            @php
+                                                $allowed = $permissions[$user->id][$tool->tool_name] ?? false;
+                                            @endphp
+                                            <td class="text-center">
+                                                <input type="checkbox" class="perm-matrix-checkbox" data-user-id="{{ $user->id }}" data-tool-name="{{ $tool->tool_name }}" {{ $allowed ? 'checked' : '' }}>
+                                            </td>
+                                        @endforeach
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div class="mt-4">
@@ -184,13 +184,17 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Toggles de ferramentas
-    document.querySelectorAll('.tool-toggle').forEach(toggle => {
-        toggle.addEventListener('change', async function() {
+    // Permission matrix handlers
+
+    // Permission matrix handlers
+    document.querySelectorAll('.perm-matrix-checkbox').forEach(cb => {
+        cb.addEventListener('change', async function() {
+            const userId = this.getAttribute('data-user-id');
             const toolName = this.getAttribute('data-tool-name');
-            
+            const allowed = this.checked;
+
             try {
-                const response = await fetch('{{ url("/api/settings/toggle") }}', {
+                const resp = await fetch('{{ url("/api/settings/permission") }}', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -199,36 +203,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify({ tool_name: toolName })
+                    body: JSON.stringify({ user_id: userId, tool_name: toolName, allowed: allowed })
                 });
 
-                if (!response.ok) {
-                    const text = await response.text().catch(() => 'no body');
-                    console.error('Toggle failed', response.status, text);
-                    this.checked = !this.checked;
-                    alert('Erro ao atualizar configuração: ' + response.status + ' - ' + text);
+                if (!resp.ok) {
+                    const txt = await resp.text().catch(() => 'no body');
+                    alert('Erro ao atualizar permissão: ' + resp.status + ' - ' + txt);
+                    this.checked = !allowed;
                     return;
                 }
 
-                let data;
-                try {
-                    data = await response.json();
-                } catch (e) {
-                    const text = await response.text().catch(() => 'no body');
-                    console.error('Invalid JSON response', text);
-                    this.checked = !this.checked;
-                    alert('Resposta inválida do servidor');
-                    return;
+                const data = await resp.json().catch(() => null);
+                if (!data || !data.success) {
+                    alert('Erro ao atualizar permissão');
+                    this.checked = !allowed;
                 }
-
-                if (!data.success) {
-                    this.checked = !this.checked;
-                    alert('Erro ao atualizar configuração');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                this.checked = !this.checked;
-                alert('Erro ao atualizar configuração');
+            } catch (err) {
+                console.error(err);
+                alert('Erro ao atualizar permissão');
+                this.checked = !allowed;
             }
         });
     });

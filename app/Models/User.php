@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +45,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function toolPermissions()
+    {
+        return $this->hasMany(UserToolPermission::class);
+    }
+
+    public function hasTool(string $toolName): bool
+    {
+        if (($this->role ?? 'client') === 'admin') return true;
+
+        return $this->toolPermissions()->whereHas('tool', function($q) use ($toolName) {
+            $q->where('tool_name', $toolName);
+        })->where('allowed', true)->exists();
     }
 }

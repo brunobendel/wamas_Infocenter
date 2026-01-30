@@ -9,9 +9,11 @@
         <div class="d-flex gap-2">
             @auth
                 <span class="badge bg-info text-dark">{{ Auth::user()->name }}</span>
-                <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-cog"></i> Configurações
-                </a>
+                @if((Auth::user()->role ?? 'client') === 'admin')
+                    <a href="{{ route('settings.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-cog"></i> Configurações
+                    </a>
+                @endif
                 <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                     @csrf
                     <button type="submit" class="btn btn-outline-danger btn-sm">
